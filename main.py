@@ -2,6 +2,7 @@ from docx import Document
 import json
 import os, glob
 import re
+
 filename = glob.glob('Input\*.docx')
 
 dicts = {}
@@ -16,8 +17,10 @@ for table in document.tables:
 parag1 = []
 for para in document.paragraphs:
     parag1.append(para.text)
+print(tab)
 
 
+# Поиск города и инн
 def searchinncity(parag):
     for i in parag:
         if re.fullmatch('\d{10}', i):
@@ -26,10 +29,10 @@ def searchinncity(parag):
     dicts['city'] = city[0]
 
 
-
+# Поиск технических устройств опо
 def searchvid(sp):
     mets = []
-    for i in range(0,len(sp)):
+    for i in range(0, len(sp)):
         if sp[i] == 'производственных объектов (ТУ ОПО)':
             i += 1
             while sp[i] != '2.4. Шифр НД по сварке':
@@ -39,15 +42,67 @@ def searchvid(sp):
     formatvid(sp=mets)
 
 
+# Форматирование ту опо в словарь
 def formatvid(sp):
     for i in sp:
         osn = re.findall('[А-Я]+', i)[0]
-        dop =','.join(re.findall('п[.\s]\d+', i))
+        dop = ','.join(re.findall('п[.\s]\d+', i))
         vids[osn] = dop
 
 
+# Поиск группы основного материала
+def searchosnmatgroup(sp):
+    index = sp.index('2.5. Группа основного материала')
+    osnmatgroup = sp[index + 1].split()
+    return osnmatgroup
+
+# Поиск вида свариваемых деталей
+def searchvidsvardet(sp):
+    index = sp.index('2.6. Вид свариваемых деталей')
+    vidsvardet = sp[index + 1].split()
+    return vidsvardet
+
+# Поиск типов сварного шва
+def searchtypesvarshov(sp):
+    index = sp.index('2.7. Тип сварного шва')
+    typesvarshov = sp[index + 1].split()
+    return typesvarshov
+
+
+def searchtypeandvidconnect(sp):
+    index = sp.index('2.8. Тип и вид соединения')
+    typeandvidconnect = sp[index + 1].split()
+    return typeandvidconnect
+
+def searchtolchrange(sp):
+    index = sp.index('2.9. Диапазон толщин деталей')
+    tolchrange = sp[index + 1]
+    if 'выше' in tolchrange:
+        return tolchrange
+
+def searchdiamrange(sp):
+    index = sp.index('2.10. Диапазон диаметров деталей')
+    diamrange = sp[index + 1]
+    if 'выше' in diamrange:
+        return diamrange
+
+
+def searchsvarposit(sp):
+    index = sp.index('2.11. Положение при сварке')
+    svarposit = sp[index + 1]
+    # print(svarposit)
+    return svarposit
+
+def searchsvarmater(sp):
+    index = sp.index('2.12. Сварочные материалы')
+    svarmater = sp[index + 1]
+    # print(svarmater)
+    return svarmater
+
+
+# searchsvarmater(tab)
 out = []
-for i in (1, 3, 5, 7, 9, 18, 20, 23, 24, 25, 27, 29, 31, 33, 35, 37, 39, 41, 43, 46, 48, 50, 53, -5, ):
+for i in (1, 3, 5, 7, 9, 18, 20, 23, 24, 25, 27, 29, 31, 33, 35, 37, 39, 41, 43, 46, 48, 50, 53, -5,):
     out.append(tab[i])
     fio = out[0].split()
     out.pop(0)
@@ -59,12 +114,20 @@ dicts['fam'] = out[0]
 dicts['nam'] = out[1]
 dicts['otch'] = out[2]
 dicts['bdate'] = out[3]
-dicts['wplace'] = out[4][:-6]+'Газпром Трансгаз Нижний Новгород'
+dicts['wplace'] = out[4][:-6] + 'Газпром Трансгаз Нижний Новгород'
 dicts['staj'] = out[5]
 dicts['razr'] = out[6]
 dicts['vid'] = out[7]
 dicts['method'] = re.findall('[А-Я]+', out[8])[0]
-dicts['group']=vids
+dicts['group'] = vids
+dicts['osnmatgroup'] = searchosnmatgroup(tab)
+dicts['vidsravdet'] = searchvidsvardet(tab)
+dicts['typesvarshov'] = searchtypesvarshov(tab)
+dicts['typeandvidconnect'] = searchtypeandvidconnect(tab)
+dicts['tolchrange'] = searchtolchrange(tab)
+dicts['diamrange'] = searchdiamrange(tab)
+dicts['svarposit'] = searchsvarposit(tab)
+dicts['searchsvarmater'] = searchsvarmater(tab)
 searchinncity(parag=parag1)
 print(dicts)
 with open('Out/data.txt', 'w') as outfile:
@@ -72,8 +135,6 @@ with open('Out/data.txt', 'w') as outfile:
 
 # for file in glob.glob("Input\*"):
 #     os.remove(file)
-
-
 
 
 #  рабочая версия
