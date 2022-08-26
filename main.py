@@ -17,13 +17,23 @@ for table in document.tables:
 parag1 = []
 for para in document.paragraphs:
     parag1.append(para.text)
-print(tab)
+
+# print(tab)
+# print(parag1)
 
 
+def searchndkontrkach(sp):
+    for i in sp:
+        if re.findall('[)]:.+', i):
+            nd = re.findall('[)]:.+', i)[0][2:]
+            return nd
+
+
+searchndkontrkach(parag1)
 # Поиск города и инн
 def searchinncity(parag):
     for i in parag:
-        if re.fullmatch('\d{10}', i):
+        if re.fullmatch('\d{10}[\t]?', i):
             dicts['inn'] = i
     city = re.findall('\sг.[а-яА-ЯёЁ\s]+', parag[4])
     dicts['city'] = city[0]
@@ -49,58 +59,117 @@ def formatvid(sp):
         dop = ','.join(re.findall('п[.\s]\d+', i))
         vids[osn] = dop
 
-
+def searchshifrvd(sp):
+    index = sp.index('2.4. Шифр НД по сварке')
+    shifrvd = sp[index + 1]
+    return shifrvd
 # Поиск группы основного материала
 def searchosnmatgroup(sp):
     index = sp.index('2.5. Группа основного материала')
-    osnmatgroup = sp[index + 1].split()
+    osnmatgroup = sp[index + 1]
     return osnmatgroup
 
 # Поиск вида свариваемых деталей
-def searchvidsvardet(sp):
+def searchvidsvardet(sp, ):
     index = sp.index('2.6. Вид свариваемых деталей')
-    vidsvardet = sp[index + 1].split()
+    vidsvardet1 = sp[index + 1].split()
+    vidsvardet2 = []
+    for i in vidsvardet1:
+        if re.fullmatch('[;]?[Т][;]?', i):
+            vidsvardet2.append('Т1')
+        elif re.fullmatch('[;]?[Л][;]?', i):
+            vidsvardet2.append('Л1')
+        elif re.fullmatch('[;]?[С][;]?', i):
+            vidsvardet2.append('С1')
+        else:
+            vidsvardet2.append(i)
+    vidsvardet = ' '.join(vidsvardet2)
     return vidsvardet
+
 
 # Поиск типов сварного шва
 def searchtypesvarshov(sp):
     index = sp.index('2.7. Тип сварного шва')
-    typesvarshov = sp[index + 1].split()
+    typesvarshov = sp[index + 1]
     return typesvarshov
 
 
 def searchtypeandvidconnect(sp):
     index = sp.index('2.8. Тип и вид соединения')
-    typeandvidconnect = sp[index + 1].split()
+    typeandvidconnect = sp[index + 1]
     return typeandvidconnect
 
 def searchtolchrange(sp):
     index = sp.index('2.9. Диапазон толщин деталей')
-    tolchrange = sp[index + 1]
-    if 'выше' in tolchrange:
-        return tolchrange
+    tolchrange1 = sp[index + 1]
+    tolchrange = []
+    if 'выше' in tolchrange1:
+        tolchrange.append(tolchrange1)
+        tolchrange.append('')
+    else:
+        tolchrange.append(re.findall('\d{1,},\d{1,}', tolchrange1)[0])
+        tolchrange.append(re.findall('\d{1,},\d{1,}', tolchrange1)[1])
+    return tolchrange
 
 def searchdiamrange(sp):
     index = sp.index('2.10. Диапазон диаметров деталей')
-    diamrange = sp[index + 1]
-    if 'выше' in diamrange:
-        return diamrange
+    diamrange1= sp[index + 1]
+    diamrange=[]
+    if 'выше' in diamrange1:
+        diamrange.append(diamrange1)
+        diamrange.append('')
+    else:
+        diamrange.append(re.findall('\d{1,},\d{1,}', diamrange1)[0])
+        diamrange.append(re.findall('\d{1,},\d{1,}', diamrange1)[1])
+    return diamrange
+
+
+def searchrangestersh(sp):
+    index = sp.index('2.14. Диапазон диаметров стержней')
+    rangestersh1= sp[index + 1]
+    rangestersh=[]
+    if len(rangestersh1) > 2:
+        if 'выше' in rangestersh1:
+            rangestersh.append(rangestersh1)
+            rangestersh.append('')
+        else:
+            rangestersh.append(re.findall('\d{1,}[,]?\d*', rangestersh1)[0])
+            rangestersh.append(re.findall('\d{1,}[,]?\d*', rangestersh1)[1])
+
+    return rangestersh
 
 
 def searchsvarposit(sp):
     index = sp.index('2.11. Положение при сварке')
     svarposit = sp[index + 1]
-    # print(svarposit)
     return svarposit
 
 def searchsvarmater(sp):
     index = sp.index('2.12. Сварочные материалы')
-    svarmater = sp[index + 1]
-    # print(svarmater)
+    svarmater1 = sp[index + 1].split()
+    svarmater2 = []
+    for i in svarmater1:
+        if re.fullmatch('[;]?[Б][;]?', i):
+            svarmater2.append('Б1')
+        elif re.fullmatch('[;]?[А][;]?', i):
+            svarmater2.append('А1')
+        elif re.fullmatch('[;]?[Р][;]?', i):
+            svarmater2.append('Р1')
+        else:
+            svarmater2.append(i)
+    svarmater = ' '.join(svarmater2)
     return svarmater
 
+def searchtypebygost(sp):
+    index = sp.index('арматуры железобетонных конструкций')
+    typebygost = sp[index + 1]
+    return typebygost
 
-# searchsvarmater(tab)
+def searchsterzhosposit(sp):
+    index = sp.index('2.15. Положение осей стержней при сварке')
+    sterzhosposit = sp[index + 1]
+    return sterzhosposit
+
 out = []
 for i in (1, 3, 5, 7, 9, 18, 20, 23, 24, 25, 27, 29, 31, 33, 35, 37, 39, 41, 43, 46, 48, 50, 53, -5,):
     out.append(tab[i])
@@ -126,8 +195,13 @@ dicts['typesvarshov'] = searchtypesvarshov(tab)
 dicts['typeandvidconnect'] = searchtypeandvidconnect(tab)
 dicts['tolchrange'] = searchtolchrange(tab)
 dicts['diamrange'] = searchdiamrange(tab)
+dicts['rangestersh'] = searchrangestersh(tab)
 dicts['svarposit'] = searchsvarposit(tab)
-dicts['searchsvarmater'] = searchsvarmater(tab)
+dicts['svarmater'] = searchsvarmater(tab)
+dicts['shifrvd'] = searchshifrvd(tab)
+dicts['typebygost'] = searchtypebygost(tab)
+dicts['sterzhosposit'] = searchsterzhosposit(tab)
+dicts['ndkontrkach'] = searchndkontrkach(parag1)
 searchinncity(parag=parag1)
 print(dicts)
 with open('Out/data.txt', 'w') as outfile:
