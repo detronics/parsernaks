@@ -178,6 +178,31 @@ for i in (1, 3, 5, 7, 9, 18, 20, 23, 24, 25, 27, 29, 31, 33, 35, 37, 39, 41, 43,
     for i in range(0, len(fio)):
         out.insert(i, fio[i])
 
+comm_members = ['2347', '2621330','2014498','2014498',]
+
+RD = {'НГДО':{'п.3':['3', '3'], 'п.4': ['4', '4', '4'], 'п.13': ['13', '13', '13']},
+      'СК':{'п.1':['1', '1'], 'п.2':['2', '2'], 'п.3':['3', '3']},
+      'КО':{'п.1':['1', '1'], 'п.2':['2', '2'], 'п.3':['3', '3']},
+      'ГО':{'п.1':['1', '1'], 'п.2':['2', '2'], 'п.3':['3', '3']}}
+G = {'НГДО':{'3':['12', '56'], '4': ['101', '202', '303']}, 'СК':{'7':['4', '5'], '11':['6', '7']}}
+RAD = {}
+
+def select(method):
+    if 'РАД' in method:
+        search_blueprint(RAD, group=dicts['group'])
+    elif 'РД' in method:
+        search_blueprint(RD, group=dicts['group'])
+
+def search_blueprint(dict, group):
+    out_blueprint = []
+    for vid in group.keys():
+        for numbrs in group[vid].split(','):
+            out_blueprint += dict[vid][numbrs]
+    dicts['blueprints'] = out_blueprint
+
+
+
+
 searchvid(sp=tab)
 dicts['fam'] = out[0]
 dicts['nam'] = out[1]
@@ -202,7 +227,11 @@ dicts['shifrvd'] = searchshifrvd(tab)
 dicts['typebygost'] = searchtypebygost(tab)
 dicts['sterzhosposit'] = searchsterzhosposit(tab)
 dicts['ndkontrkach'] = searchndkontrkach(parag1)
+dicts['members'] = comm_members
+select(dicts['method'])
 searchinncity(parag=parag1)
+
+
 print(dicts)
 with open('Out/data.txt', 'w') as outfile:
     json.dump(dicts, outfile)
