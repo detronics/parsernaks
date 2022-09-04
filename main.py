@@ -7,13 +7,15 @@ filename = glob.glob('Input\*.docx')
 
 dicts = {}
 table_data = []
-out = []
 paragraph_data = []
 vids = {}
 field_keys = ['2.4. Шифр НД по сварке', '2.5. Группа основного материала', '2.7. Тип сварного шва',
               '2.8. Тип и вид соединения', '2.11. Положение при сварке', 'арматуры железобетонных конструкций',
-              '2.15. Положение осей стержней при сварке']
+              '2.15. Положение осей стержней при сварке', '1.2. Дата рождения',
+              '1.3. Место работы (сокращенное наименование)', '1.4. Стаж работы по сварке',
+              '1.5. Квалификационный разряд (при наличии)', '2.1. Вид аттестации', '2.2. Способ сварки (наплавки)']
 out_data = {}
+# Члены комиссии
 comm_members = ['2347', '2621330', '2014498', '2014498', ]
 RD = {'НГДО': {'п.3': ['3', '3'], 'п.4': ['4', '4', '4'], 'п.13': ['13', '13', '13']},
       'СК': {'п.1': ['1', '1'], 'п.2': ['2', '2'], 'п.3': ['3', '3']},
@@ -31,6 +33,7 @@ for table in document.tables:
 
 for para in document.paragraphs:
     paragraph_data.append(para.text)
+
 
 # Поиск шифра НД, регламентирующих нормы оценки качества
 def searchndkontrkach(sp):
@@ -77,6 +80,15 @@ def searchdatafromfield(field_keys, data):
         out_data[i] = data[index + 1]
 
 
+# Поиск и форматирование ФИО
+def searchandsplitfio(data):
+    index = data.index('1.1. Фамилия, имя, отчество')
+    fio = data[index + 1].split()
+    out_data['Фамилия'] = fio[0]
+    out_data['Имя'] = fio[1]
+    out_data['Отчество'] = fio[2]
+
+
 # Поиск вида свариваемых деталей
 def searchvidsvardet(sp):
     index = sp.index('2.6. Вид свариваемых деталей')
@@ -97,7 +109,7 @@ def searchvidsvardet(sp):
 
 # Поиск диапазонов  диаметров и толщин деталей
 def searchtolchanddiam(data):
-    keys = ['2.9. Диапазон толщин деталей', '2.10. Диапазон диаметров деталей' ]
+    keys = ['2.9. Диапазон толщин деталей', '2.10. Диапазон диаметров деталей']
     for i in keys:
         index = data.index(i)
         range_str = data[index + 1]
@@ -145,13 +157,6 @@ def searchsvarmater(sp):
     return svarmater
 
 
-for i in (1, 3, 5, 7, 9, 18, 20, 23, 24, 25, 27, 29, 31, 33, 35, 37, 39, 41, 43, 46, 48, 50, 53, -5,):
-    out.append(table_data[i])
-    fio = out[0].split()
-    out.pop(0)
-    for i in range(0, len(fio)):
-        out.insert(i, fio[i])
-
 def select(method):
     if 'РАД' in method:
         search_blueprint(RAD, group=dicts['group'])
@@ -166,18 +171,22 @@ def search_blueprint(dict, group):
             out_blueprint += dict[vid][numbrs]
     dicts['blueprints'] = out_blueprint
 
+
+searchandsplitfio(data=table_data)
 searchdatafromfield(field_keys=field_keys, data=table_data)
 searchtolchanddiam(data=table_data)
 searchvid(sp=table_data)
-dicts['fam'] = out[0]
-dicts['nam'] = out[1]
-dicts['otch'] = out[2]
-dicts['bdate'] = out[3]
-dicts['wplace'] = out[4][:-6] + 'Газпром Трансгаз Нижний Новгород'
-dicts['staj'] = out[5]
-dicts['razr'] = out[6]
-dicts['vid'] = out[7]
-dicts['method'] = re.findall('[А-Я]+', out[8])[0]
+searchinncity(parag=paragraph_data)
+
+dicts['fam'] = out_data['Фамилия']
+dicts['nam'] = out_data['Имя']
+dicts['otch'] = out_data['Отчество']
+dicts['bdate'] = out_data['1.2. Дата рождения']
+dicts['wplace'] = out_data['1.3. Место работы (сокращенное наименование)'][:-6] + 'Газпром Трансгаз Нижний Новгород'
+dicts['staj'] = out_data['1.4. Стаж работы по сварке']
+dicts['razr'] = out_data['1.5. Квалификационный разряд (при наличии)']
+dicts['vid'] = out_data['2.1. Вид аттестации']
+dicts['method'] = re.findall('[А-Я]+', out_data['2.2. Способ сварки (наплавки)'])[0]
 dicts['group'] = vids
 dicts['osnmatgroup'] = out_data['2.5. Группа основного материала']
 dicts['vidsravdet'] = searchvidsvardet(table_data)
@@ -194,15 +203,13 @@ dicts['sterzhosposit'] = out_data['2.15. Положение осей стерж�
 dicts['ndkontrkach'] = searchndkontrkach(paragraph_data)
 dicts['members'] = comm_members
 select(dicts['method'])
-searchinncity(parag=paragraph_data)
-print(out_data)
+
 print(dicts)
 with open('Out/data.txt', 'w') as outfile:
     json.dump(dicts, outfile)
 
-# for file in glob.glob("Input\*"):
-#     os.remove(file)
-
+for file in glob.glob("Input\*"):
+    os.remove(file)
 
 #  рабочая версия
 # // ==UserScript==
