@@ -176,13 +176,30 @@ def select(method):
         search_blueprint(RAD, group=dicts['group'])
     elif 'РД' in method:
         search_blueprint(RD, group=dicts['group'])
+    elif 'Г' in method:
+        search_blueprint(G, group=dicts['group'])
+    elif 'МП' in method:
+        search_blueprint(MP, group=dicts['group'])
+    elif 'МПС' in method:
+        search_blueprint(MPS, group=dicts['group'])
+    elif 'АПГ' in method:
+        search_blueprint(APG, group=dicts['group'])
+    elif 'ЗН' in method:
+        search_blueprint(ZN, group=dicts['group'])
+    elif 'НИ' in method:
+        search_blueprint(NI, group=dicts['group'])
+    elif 'Т' in method:
+        search_blueprint(T, group=dicts['group'])
 
 
 def search_blueprint(dict, group):
     out_blueprint = []
-    for vid in group.keys():
-        for numbrs in group[vid].split(','):
-            out_blueprint += dict[vid][numbrs]
+    if dict != ZN:
+        for vid in group.keys():
+            for numbrs in group[vid].split(','):
+                out_blueprint += dict[vid][numbrs]
+    else:
+        pass
     dicts['blueprints'] = out_blueprint
 
 
